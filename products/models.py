@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+from PIL import Image
 
 # Create your models here.
 class Category(models.Model):
@@ -30,10 +31,27 @@ class Product(models.Model):
         return self.name
     
     def get_absolute_url(self):
-        return reverse("product_detail", kwargs={"pk": self.pk})
+        return reverse("product_detail", kwargs={"pk": self.pk})      
+        
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # for handelling image checking the image height and width
+        
+        try:
+            if self.image and self.image.name != 'default_product.jpg':
+                img = Image.open(self.image.path)
+                if img.height > 800 or img.width > 800:
+                    output_size = (800,800)
+                    img.thumbnail(800,800)
+                    img.save(self.image.path)
+        except(OSError, IOError):
+            pass
+                    
+                    
     
     
     # aalu 2
     # tamatar 3
 # www.eshop/products/aalu
 # www.eshop/products/300
+
