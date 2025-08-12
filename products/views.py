@@ -3,6 +3,10 @@ from .models import Product,Category
 from django.contrib.auth.decorators import login_required
 from .forms import ProductForm
 from django.contrib import messages
+from django.db.models import Q
+
+
+
 # Create your views here.
 def home(request):
     products = Product.objects.filter(avilable=True).order_by('-created_at')[:8]
@@ -11,7 +15,56 @@ def home(request):
         'products':products,
         'categories': categories,
     }
-    return render(request, '', context)
+    return render(request, '',context)
+
+
+def product_list(request):
+    query = request.GET.get('q')
+    category_id = request.GET.get('category')
+    
+    
+    products = Product.objects.filter(avilable=True)
+    
+    if query:
+        products = products.filter(
+            Q(name__icontain=query) |
+            Q(description__icontain=query) |
+            Q(seller__username__icontain=query)
+            
+        )
+    if category_id:
+        products= products.filter(category_id=category_id)
+        
+    products = products.order_by('-created_at')
+    
+    paginator = paginator(products, 12)
+    page_number= request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    
+    categories = Category.objects.all()
+    
+    context = {
+        'page_obj':page_obj,
+        'categories':categories,
+        'query':query,
+        'selected_category':int(category_id) if category_id else None,
+        
+    }
+    return render(request,'' ,context)
+    
+    
+    
+    # 127.0.0.1/products/12
+    
+
+
+
+
+
+
+
+
 
 
 @login_required
@@ -27,7 +80,8 @@ def create_product(request):
     else:
         form = ProductForm()
     return render()
-    
+
+
 
 @login_required  
 def update_product(request, pk):
