@@ -46,8 +46,19 @@ class Product(models.Model):
                     img.save(self.image.path)
         except(OSError, IOError):
             pass
-                    
-                    
+
+
+
+class ProductLike(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    create_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'product')
+        
+    def __str__(self):
+        return self.name
     
     
     # aalu 2

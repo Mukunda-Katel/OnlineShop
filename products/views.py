@@ -95,3 +95,12 @@ def update_product(request, pk):
     else:
         form = ProductForm(instance=product)
     return render()
+
+
+def delete_product(request, pk):
+    product= get_object_or_404(Product, pk=pk, seller=request.user)
+    if request.method == 'POST':
+        product.delete()
+        messages.success(request, 'delete bhayo')
+        return redirect()
+    return render()
