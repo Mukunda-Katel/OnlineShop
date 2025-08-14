@@ -1,9 +1,11 @@
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Product,Category
+from .models import Product,Category, ProductLike
 from django.contrib.auth.decorators import login_required
 from .forms import ProductForm
 from django.contrib import messages
 from django.db.models import Q
+from django.core.paginator import Paginator
 
 
 
@@ -37,7 +39,7 @@ def product_list(request):
         
     products = products.order_by('-created_at')
     
-    paginator = paginator(products, 12)
+    paginator = Paginator(products, 12)
     page_number= request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
@@ -103,4 +105,36 @@ def delete_product(request, pk):
         product.delete()
         messages.success(request, 'delete bhayo')
         return redirect()
+    return render()
+
+
+def toggle_like(request, pk):
+    if request.method == 'POST':
+        product = get_object_or_404(Product, pk=pk)
+        like, created = ProductLike.objects.get_or_create(
+            user= request.user, product=product
+        )
+        if not created:
+            like.delete()
+            liked = False
+        else:
+            liked = True
+            
+        total_like= ProductLike.objects.filter(product=product).count()
+        
+        return JsonResponse({
+            'liked' : liked,
+            'total_like':total_like, 
+        })
+    return JsonResponse({'error':'Indivalid request'}, status=400)
+        
+def my_product(request):
+    if not request.user.is_authenticated:
+        return redirect()
+    
+    product = Product.objects.filter(seller =request.user).order_by('-created_at')
+    paginator = Paginator(product, 10)  
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     return render()
